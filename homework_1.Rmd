@@ -1,0 +1,42 @@
+---
+title: "Assignment 1 - Interesting R Examples"
+author: "Tayfun Gumus - ETM 58D - Spring 2018"
+date: "Apr 10, 2017"
+---
+```{r,echo=FALSE,results="hide"}
+library(knitr)
+opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE)
+```
+
+```{r,echo=FALSE,eval=FALSE}
+rmarkdown::render("/Users/berkorbay/Dropbox/Courses_given/MEF_BDA_503_2017F/Guidelines/example_homework_1.Rmd",output_format="pdf_document")
+rmarkdown::render("/Users/berkorbay/Dropbox/Courses_given/MEF_BDA_503_2017F/Guidelines/example_homework_1.Rmd",output_format="html_document")
+```
+
+# Current Work
+
+  I'm currently working at TURKCELL as a business analyst in marketing solutions unit. As a team, we are responsible for contract management which provides customer binding. Customers can buy smartphones, accessories with various installments amounts which can be paid via TFÞ.(Turkcell Finance). Also, we are managing services, tariffs and options with contract. We are working closer with marketing,sales and customer experience teams, and we have really huge amount of data, since we keep all transactions that are made by customer while it is in contract. If I use beautiful and easy features of R programming on transaction data well, I can help business units to target right customer groups, suggest right servies and products and so on. Also, with examining transaction data, I can make customer experience better watching all moves of customers between products.  
+
+
+# RStudio Conference 
+
+  On RStudio Conference 2018, I found an useful presentation about Opinionated Analysis Development. After examination of presentation, I became more interested and I read the paper mentioned on presentation. On the paper, author proposes what key featues should an analysis have clearly and states all steps to carry on. As a business analyst who is interested with the data analysis, I can totally use the structure given in the paper. 
+
+
+([Opinionated_Analysis_Development-Hilary_Parker]( https://github.com/rstudio/rstudio-conf/blob/master/2017/Opinionated_Analysis_Development-Hilary_Parker/2017-01-14-rstudio-conf-170114193522.pdf))
+
+
+# Examples
+
+1.([Review of Customer Churn Analysis Studies in Telecommunications Industry](http://fbd.beun.edu.tr/index.php/zkufbd/article/download/875/373))
+
+  This study is a review about prediction of customers having churn tendency and it is a collection of some methods which are used before by relevant people. Since I work in telecommunication industry, and my work is about contracting and binding customers, it is good to know what methods are used. I can apply some methods mentioned in study and can predict customers willing to end their contracts. 
+   
+2.([CUSTOMER SEGMENTATION PART 1: K-MEANS CLUSTERING](http://www.business-science.io/business/2016/08/07/CustomerSegmentationPt1.html))
+
+  In this study, K-Means clustering is used to segment customers into distinct groups. Again, Ýt is important to segment customers in telecommunication industry as well as others to suggest proper services and products. Also, customers buy smartphones using their mobile number and there are limitations for some customers based on their criterias. With clustering, we can detect customers who can't pay further installments from some features and this can help us to prevent fraud cases. 
+  
+3.([Developing web-based data analysis tools for precision
+farming using R and Shiny](http://iopscience.iop.org/article/10.1088/1755-1315/20/1/012014/pdf))
+  
+  This article states that using R programming and data analysis can be helpful for agriculture industry which I interested in, since my family is growing some fruits to earn money. Turkey is exposing to lack of data on Agriculture at the moment, but if the things change, data analysis can be helpful for efficient farming.
