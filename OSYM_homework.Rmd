@@ -1,0 +1,91 @@
+---
+title: "Assignment 1 - Interesting R Examples"
+author: "Tayfun Gumus - ETM 58D - Spring 2018"
+date: "Apr 10, 2017"
+---
+```{r,echo=FALSE,results="hide"}
+library(knitr)
+opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE)
+```
+
+```{r,echo=FALSE,eval=FALSE}
+rmarkdown::render("/Users/berkorbay/Dropbox/Courses_given/MEF_BDA_503_2017F/Guidelines/example_homework_1.Rmd",output_format="pdf_document")
+rmarkdown::render("/Users/berkorbay/Dropbox/Courses_given/MEF_BDA_503_2017F/Guidelines/example_homework_1.Rmd",output_format="html_document")
+```
+
+This is an individual in-class exercise. At the end of the exercise, please upload html outputs to your Progress Journals.
+
+```{r}
+library(tidyverse)
+load("/Users/TCTAGUMUS/Documents/R işleri/osym_data_2017_v2.RData")
+head(osym_data_2017)
+osym_data_2017 <- osym_data_2017 %>% mutate(general_quota = as.numeric(general_quota), general_placement = as.numeric(general_placement))
+```
+
+1. Get the highest `max_score` programs from each `exam_type`.
+
+```{r}
+Max_score_programs <- osym_data_2017 %>% group_by(exam_type,program_name) %>% summarize(Max_score_programs = max(max_score)) %>% filter(Max_score_programs ==  max(Max_score_programs))
+```
+
+2. Plot the top 10 programs of İSTANBUL ÜNİVERSİTESİ in terms of total quota in a bar chart.
+
+```{r}
+top_10_iu <- osym_data_2017 %>% filter(university_name == "İSTANBUL ÜNİVERSİTESİ") %>% arrange(desc(general_quota)) %>% slice(1:10)
+
+ggplot(data=top_10_iu) + geom_bar(aes(x=reorder(program_name,-general_quota),y=general_quota),stat="identity") + theme(axis.text.x=element_text(angle=90))
+```
+
+3. Calculate the fill rate (sum(`general_placement`)/sum(`general_quota`)) per city and return the top 10 cities.
+
+```{r}
+osym_data_2017 %>% group_by(city) %>% summarise(fill_rate = sum(general_placement)/sum(general_quota)) %>% ungroup() %>% arrange(desc(fill_rate)) %>% slice(1:10)
+```
+
+4. Find full (`general_placement` == `general_quota`) Endüstri Mühendisliği programs (use `grepl`) and draw a scatterplot of min_score vs max_score. Set transparency parameter (`alpha`) to 0.7. Set program colors according to whether it is a foundation university or state university. (Tip: State university programs ids start with 1, foundation 2, KKTC 3 and other abroad 4. You can use `substr` function.).
+
+```{r}
+Endüstri <- osym_data_2017 %>% filter (grepl ('Endüstri Mühendisliği', program_name)) 
+Endüstri_data <- subset( Endüstri ,general_quota == general_placement) 
+ggplot(Endüstri_data) + geom_point(aes(x=min_score , y =max_score , color = substr(program_id,1,1), alpha = 0.7)) +xlab("min_score") + ylab ("max_score") + labs (color = "University_type") + scale_color_manual( values = c(1,2,3), labels = c("state","foundation","KKTC")) + guides(alpha = "none")
+```
+
+5. Find the top 10 faculties with the highest quotas and draw a bar chart. Ignore similar names and typos in faculty names.
+
+```{r}
+Highest_quotas <- osym_data_2017 %>% group_by(university_name ,faculty_name) %>% summarize (max_quota=max(general_quota))  %>% arrange(desc(max_quota)) %>% mutate(faculty = paste(university_name, faculty_name)) %>% ungroup() %>% select(faculty,max_quota) %>% slice (1:10)
+ggplot(Highest_quotas) + geom_col(aes(x= reorder(faculty,-max_quota) ,y = max_quota )) + theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) + xlab("faculty")
+```
+
+6. Find all full medicine programs (Tıp but not Tıp Mühendisliği) of foundation universities group by university calculate total quotas per university and maximum max_score and minimum min_score as bounds, ordered and colored by total quota. (Tip: Use `geom_crossbar`)
+
+```{r}
+ tıp <- osym_data_2017 %>% filter(grepl("Tıp", program_name)) %>% filter(!grepl("Mühen",program_name)) %>% filter(substr(program_id,1,1) == 1) %>% group_by(university_name) %>% summarize(total_quotas = sum(general_quota), max_score = max(max_score),min_score = min(min_score) ) %>%ungroup() %>% arrange(desc(total_quotas))
+ggplot(tıp) + geom_crossbar(aes(x=reorder(university_name,-total_quotas) , y = ((max_score+min_score)/2) , ymax= max_score , ymin = min_score , color = total_quotas)) + labs (y = "score") + theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) + xlab ("university")
+```
+
+7. Freestyle: Do an analysis that compares the mechanical engineering (Makine Mühendisliği) and civil engineering (İnşaat Mühendisliği) programs.
+
+
+```{r}
+ Makine <- osym_data_2017 %>% filter(grepl("Makine Mühendisliği", program_name)) %>% group_by(university_name) %>% summarize(total_quotas = sum(general_quota), max_score = max(max_score),min_score = min(min_score) ) %>%ungroup() %>% arrange(desc(max_score))%>% slice(1:10)
+İnşaat <- osym_data_2017 %>% filter(grepl("İnşaat Mühendisliği", program_name)) %>% group_by(university_name) %>% summarize(total_quotas = sum(general_quota), max_score = max(max_score),min_score = min(min_score) ) %>%ungroup %>% filter(university_name %in% Makine$university_name)
+ggplot(İnşaat) + geom_crossbar(aes(x=reorder(university_name,-total_quotas) , y = ((max_score+min_score)/2) , ymax= max_score , ymin = min_score , color = "blue")) + labs (y = "score") + theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) + xlab ("university") + geom_crossbar(data = Makine, aes(x=reorder(university_name,-total_quotas) , y = ((max_score+min_score)/2) , ymax= max_score , ymin = min_score, color = "yellow" )) + scale_color_manual(values = c("Blue","Red"), labels = c("İnşaat","Makine") ) + labs(color = "Bölüm")
+```
+
+8. Freestyle: Compare Koç University with Bilkent University.
+ 
+I pivotted max_score, min_score and fill_rate basically.
+
+```{r}
+osym_data_2017 %>% filter(grepl("BİLKENT ÜNİVERSİTESİ", university_name) | grepl("KOÇ ÜNİVERSİTESİ" , university_name)  ) %>% group_by(university_name) %>% summarize (Total_quota = sum(general_quota), max_score = max(max_score), min_score = min (min_score),fill_rate = sum(general_placement)/sum(general_quota))
+```
+
+9. Freestyle: Do your best.
+
+Top 10 cities according to total_quota and ordered by total_quota for all  "Öğretmenlik" programs and corresponding boundaries in terms of score( max, min). In other terms, you can see  minimum score needed for "Öğretmenlik" among top 10 cities that have highest quotas.
+
+```{r}
+Analysis_by_City = osym_data_2017 %>% filter(grepl("Öğretmen", program_name)) %>% group_by(city) %>% summarize(Total_Quotas = sum(general_quota), max_score = max(max_score), min_score = min(min_score)) %>%ungroup() %>% arrange(desc(Total_Quotas)) %>% slice (1:10)
+ggplot(Analysis_by_City) + geom_errorbar(aes(x=reorder(city, -Total_Quotas), ymin= min_score, ymax = max_score, color = Total_Quotas)) + xlab("City") + ylab("Score") + theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5))
+```
