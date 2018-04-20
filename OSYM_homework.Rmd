@@ -1,5 +1,5 @@
 ---
-title: "Assignment 1 - Interesting R Examples"
+title: "Assignment 2 - OSYM DATA"
 author: "Tayfun Gumus - ETM 58D - Spring 2018"
 date: "Apr 10, 2017"
 ---
@@ -25,7 +25,7 @@ osym_data_2017 <- osym_data_2017 %>% mutate(general_quota = as.numeric(general_q
 1. Get the highest `max_score` programs from each `exam_type`.
 
 ```{r}
-Max_score_programs <- osym_data_2017 %>% group_by(exam_type,program_name) %>% summarize(Max_score_programs = max(max_score)) %>% filter(Max_score_programs ==  max(Max_score_programs))
+osym_data_2017 %>% group_by(exam_type,program_name) %>% summarize(Max_score_programs = max(max_score)) %>% filter(Max_score_programs ==  max(Max_score_programs))
 ```
 
 2. Plot the top 10 programs of İSTANBUL ÜNİVERSİTESİ in terms of total quota in a bar chart.
