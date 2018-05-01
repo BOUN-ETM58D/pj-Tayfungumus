@@ -10,4 +10,4 @@
 
 ## Assignment 3 (May 1 )
 
-+[Here](https://boun-etm58d.github.io/pj-Tayfungumus/ML-homework.html) is my machine learning assignments.
++[Here](https://boun-etm58d.github.io/pj-Tayfungumus/ML-homework.html) are my machine learning assignments.
