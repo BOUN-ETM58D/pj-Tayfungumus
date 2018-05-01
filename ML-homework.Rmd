@@ -1,0 +1,204 @@
+---
+title: "Machine Learning Examples"
+author: "Tayfun Gumus - ETM 58D - Spring 2018"
+date: "May 1, 2017"
+---
+```{r,echo=FALSE,results="hide"}
+library(knitr)
+opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE)
+```
+
+```{r,echo=FALSE,eval=FALSE}
+rmarkdown::render("/Users/berkorbay/Dropbox/Courses_given/MEF_BDA_503_2017F/Guidelines/example_homework_1.Rmd",output_format="pdf_document")
+rmarkdown::render("/Users/berkorbay/Dropbox/Courses_given/MEF_BDA_503_2017F/Guidelines/example_homework_1.Rmd",output_format="html_document")
+```
+
+# Assignment 1 
+
+## Esoph
+
+First, we build a logistic regression model to see whether our variables significant or not for cancer. 
+
+```{r}
+library(tidyverse)
+library(stats)
+library(ggplot2)
+cancer_model <- glm(cbind(ncases,ncontrols) ~ agegp + tobgp + alcgp , data = esoph , family = binomial() )
+anova(cancer_model)
+```
+
+We can clearly see age is key variable for cancer,since adding "Age" predictor causes a decrease on Residual Deviance by 88.128 . Then, alcohol consumption predictor helps our model fit better, again we can observe this by looking deviance residual. Finally, tobacco consumption also has effect on cancer which is smaller by comprasion to others. All these variables helps us to build a good model with better fit. 
+
+If we want to seek dependent effect of tobacco and alcohol, we should build a model loking at intersection effect of alcohol and tobacco consumption. 
+
+```{r}
+cancer_model <- glm(cbind(ncases,ncontrols) ~ agegp + tobgp * alcgp , data = esoph , family = binomial() )
+anova(cancer_model)
+```
+
+We can observe small decrease on residual deviance with adding intersection effect of drinking and smoking. We can claim that usage of alcohol and tobacco together increasing probability of being cancer.
+
+Reference: http://stat.ethz.ch/R-manual/R-devel/library/datasets/html/esoph.html
+
+## Young People Survey’s Hobbies & Interests
+
+I applied K-means clustering method with 5 cluster center points to see which hobbies are in same cluster and how people are interested in different hobbies. 
+
+
+```{r}
+yr_data <-
+read.csv("/Users/TCTAGUMUS/Documents/R işleri/youth_responses.csv",sep=",") %>%
+filter(complete.cases(.)) %>%
+# mutate(id=row_number()) %>%
+tbl_df()
+yr_pca<-
+yr_data[,sapply(yr_data,class)=="integer"] %>%
+select(History:Pets)
+yr_mds_data <- yr_pca %>% select(History:Pets)
+yr_dist <- 1 - cor(yr_mds_data)
+#Apply MDS
+yr_mds <- cmdscale(yr_dist,k=2)
+colnames(yr_mds) <- c("x","y")
+library(ggplot2)
+#Set the seed because K-Means algorithm uses a search based method
+set.seed(58)
+#Apply K-Means
+genre_cluster<-kmeans(yr_mds,centers=6)
+##Get the clusters
+mds_clusters<-
+data.frame(genre=names(genre_cluster$cluster),
+cluster_mds=genre_cluster$cluster) %>% arrange(cluster_mds,genre)
+mds_clusters
+
+```
+
+```{r}
+ggplot(
+    data.frame(yr_mds) %>% mutate(clusters=as.factor(genre_cluster$cluster),
+    genres=rownames(yr_mds)),aes(x=x,y=y)) +
+    geom_text(aes(label=genres,color=clusters),angle=45,size=2) +
+    geom_point(data=as.data.frame(genre_cluster$centers),aes(x=x,y=y)
+)
+
+```
+
+From clustering table and plot, we can observe  how respondants' hobbies correlated. We can see mathematics, physics and science in 6th cluster, chemistry, medicine and biology in 2nd cluster and so on. That sounds logical. By appliyng this algorithm , we can guess which hobbies may people interest in by knowing some of their other hobbes.For example, if a young individual enjoy politics, we can conclude he/she probably like Law since these two in same cluster. 
+
+# Assignment 2 : Diamonds Data 
+
+
+I plotted carat vs price to see how price is changing according to carat and choosing cut value as a color, I aimed to see relations among price, cut and carat. In plot shown below, we can clearly see an increase in price with increase in carat but we can see all cuts(colors) thorughout price_range and this implies that cut is not significant by its own.
+
+```{r}
+
+library(rpart) #To construct CART models
+library(rpart.plot) # It also includes titanic data
+library(rattle) #For visualization
+
+ggplot(diamonds) + geom_point(aes(x = carat, y = price, color = cut ))
+
+```
+
+
+I also plotted dimensions vs price. Looking plot, we can conclude that there is a positive slope and this implies increasing x,y,z results increasing in price. 
+
+
+```{r}
+
+
+ggplot(diamonds) + geom_point(aes(x = x, y = price , color= "Blue")) +  geom_point(aes(x = y, y = price , color = "Yellow")) +  geom_point(aes(x = z, y = price , color = "Red" )) + xlim(2,12)   + labs (color = "Dimension") + scale_color_manual( values = c("Blue","Yellow","Red"), labels = c("x","y","z"))
+
+```
+
+For predictive model, I splitted data as train and test.
+
+```{r}
+
+
+
+set.seed(503)
+library(tidyverse)
+diamonds_test <- diamonds %>% mutate(diamond_id = row_number()) %>%
+group_by(cut, color, clarity) %>% sample_frac(0.2) %>% ungroup()
+diamonds_train <- anti_join(diamonds %>% mutate(diamond_id = row_number()),
+diamonds_test, by = "diamond_id")
+diamonds_train
+
+```
+
+Then, I created a model via rpart ( excluding diamond_id as an variable), and made prediction with train data. For measuring performance(How good is our model), I calculated mean error. It is about 800 in terms of price, which is acceptable good in the range of 0-15.000. 
+
+```{r}
+diamonds_model <- rpart(price ~.-diamond_id, data = diamonds_train)
+fancyRpartPlot(diamonds_model)
+diamonds_in_sample <- predict(diamonds_model) 
+diamonds_comp <- cbind(diamonds_train$price, diamonds_in_sample)
+colnames(diamonds_comp) <- c("actual", "predicted")
+ diamonds_comp <- data.frame(diamonds_comp)
+diamonds_comp$diff <- diamonds_comp$actual -diamonds_comp$predicted
+mean(abs(diamonds_comp$diff))
+print(head(diamonds_comp))
+```
+
+After train, I added test data to prediction and again calculated error. 
+
+```{r}
+diamonds_predict <- predict(diamonds_model, newdata= diamonds_test)
+diamonds_comp2 <- cbind(diamonds_test$price, diamonds_predict)
+colnames(diamonds_comp2) <- c("actual", "predicted")
+diamonds_comp2 <- data.frame(diamonds_comp2)
+diamonds_comp2$diff <- diamonds_comp2$actual -diamonds_comp2$predicted
+mean(abs(diamonds_comp2$diff))
+print(head(diamonds_comp2))
+```
+
+
+
+# Assignment 3 : Spam Data
+
+This assignment is about analyzing UCT's Spambase data and building a model on it to detect further possible spam mails according to it's features. 
+
+Firstly, data is loaded and splitted into two parts as given in dataset as test data and train data . 
+
+```{r}
+
+load("/Users/TCTAGUMUS/Documents/R işleri/spam_data.RData")
+spam_test <- spam_data %>% filter(train_test == 1 )
+spam_train <- spam_data %>% filter(train_test == 0)
+```
+
+Then, I built a model with train data using rpart and plotted a decision tree. After, predicted according to our model with train data. 
+
+
+```{r}
+spam_model <- rpart(spam_or_not ~ . -train_test, data = spam_train)
+fancyRpartPlot(spam_model)
+spam_in_sample <- predict(spam_model)
+print(head(spam_in_sample))
+```
+
+
+To see how good is my model, I compared actual and predicted values of train data. How many correct prediction that my model make divided by total case is a performance indicator for my case. 
+
+```{r}
+in_sample_prediction <- cbind(spam_train$spam_or_not , spam_in_sample)
+in_sample_prediction = data.frame ( in_sample_prediction)
+in_sample_prediction <- in_sample_prediction %>% mutate(V2= ifelse(spam_in_sample>= 0.5 ,1,0)) %>% mutate(is_correct = V1 == V2) %>% group_by(is_correct) %>% summarise(count = n(), percentage = n()/nrow(.))
+in_sample_prediction
+```
+
+As we see results above, our model can help to categorize mails into spam or not, with apprx. 9 successfull guess out of 10 tries.
+
+Finally, I repeated steps using test_data. 
+
+```{r}
+test_predict <- predict(spam_model, newdata = spam_test)
+print(head(test_predict))
+test_prediction <- cbind(spam_test$spam_or_not, test_predict)
+test_prediction <- data.frame(test_prediction)
+test_prediction <- test_prediction %>% mutate(V2= ifelse(test_predict>= 0.5 ,1,0)) %>% mutate(is_correct = V1 == V2) %>% group_by(is_correct) %>% summarise(count = n(), percentage = n()/nrow(.))
+test_prediction
+```
+
+
+
